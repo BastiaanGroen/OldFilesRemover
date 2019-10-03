@@ -1,13 +1,22 @@
 #-------------------------
+#          INFO                
+#-------------------------
 # AUTHOR: Bastiaan Groen
-# Date  : 26-9-2019
-$versie = "1.0"
+# Date  : 03-10-2019
+$version = "2.0"
 #-------------------------
 
-# BESCHRIJVING
-#   Verwijderd bestanden en folders uit een opggegeven path.
-#   Verwijderd ook lege mappen
-#   verwijderd geen 'hidden', 'read only' en 'system' files
+
+# --- DISCRIPTION --------
+# A Powershell script deletes files older than a certain date in a predefined folder.
+# It checks the last-used date property of a file, when its older than the specified date, it will be deleted.
+# It also deletes all empty folders that it can find in its predefined folder
+# ------------------------
+
+# --- CAUTION ------------
+# This powershell is NOT extensively tested.
+# There is NO undo!
+# ------------------------
 
 
 function SchrijfOutput
@@ -76,24 +85,24 @@ Write-Host -ForegroundColor "Gray" "  | |__)  / _ | '_ ' _ \ / _ \ \ / / _ | '__
 Write-Host -ForegroundColor "Gray" "  |  __ /|  __| | | | | | (_) \ V |  __| |     "
 Write-Host -ForegroundColor "Gray" " _| |  \  \___|_| |_| |_|\___/ \_/ \___|_|     "
 Write-Host -ForegroundColor "Gray" -NoNewline "|____| |__|  "
-Write-Host -ForegroundColor "DarkGray" "Verwijder oude bestanden en folders"
-Write-Host -ForegroundColor "DarkGray" -NoNewline "Versie: "
-Write-Host -ForegroundColor "red" "$($versie) "
+Write-Host -ForegroundColor "DarkGray" "~ Bastiaan Groen ~"
+Write-Host -ForegroundColor "DarkGray" -NoNewline "Version: "
+Write-Host -ForegroundColor "red" "$($version) "
 
 Write-Host -ForegroundColor "Gray" ""
 
 
-Write-Host -ForegroundColor "DarkGray" "   | [i] Gebruik backward slashes in de path: \"
+Write-Host -ForegroundColor "DarkGray" "   | [i] Use backward slashes: \"
 Write-Host -ForegroundColor "DarkGray" -nonewline "                                                                                    C:\folderToDelete`r" 
 Write-Host -ForegroundColor "Yellow" -nonewline "                                                                                 ]`r"  
-Write-Host -ForegroundColor "Yellow" -nonewline "   | [>] vul het pad naar de folder of schijf in [ "
+Write-Host -ForegroundColor "Yellow" -nonewline "   | [>] Fill in a folder path [ "
 $path = Read-Host
 
 Write-Host " "
-Write-Host -ForegroundColor "DarkGray" "   | [i] Alles bestanden voor deze datum worden verwijderd"
+Write-Host -ForegroundColor "DarkGray" "   | [i] All files BEFORE this date will be deleted"
 Write-Host -ForegroundColor "DarkGray" -nonewline "                                                dd/mm/yyyy`r" 
 Write-Host -ForegroundColor "Yellow" -nonewline "                                        ]`r"  
-Write-Host -ForegroundColor "Yellow" -nonewline "   | [>] vul de datum in [  "
+Write-Host -ForegroundColor "Yellow" -nonewline "   | [>] Fill in a date [  "
 $datumString = Read-Host
 
 try
@@ -104,9 +113,7 @@ try
 }
 catch
 {
-  Write-Host -ForegroundColor "yellow" -nonewline "   | "
-  Write-Host -ForegroundColor "red" -nonewline "[!] "
-  Write-Host -ForegroundColor "yellow" -nonewline "Datum is verkeerd ingevuld! "
+  SchrijfOutput -level "error" -text "Date was incorrect!"
   exit
 }
 
@@ -117,33 +124,33 @@ $LegeFolders = ( Get-ChildItem -Path $path -Recurse -Force | Where-Object { $_.P
 Write-Host " "
 Write-Host " "
 Write-Host -ForegroundColor Yellow "==============================================="
-Write-Host -ForegroundColor Yellow "[i] Totaal Aantal Bestanden: " -NoNewline
+Write-Host -ForegroundColor Yellow "[i] Total files:             " -NoNewline
 Write-Host -ForegroundColor Gray  "$($TotalFiles) "
-Write-Host -ForegroundColor Yellow "[i] Te Verwijdere Bestanden: " -NoNewline
+Write-Host -ForegroundColor Yellow "[i] To be deleted:           " -NoNewline
 Write-Host -ForegroundColor Gray  "$($TotalDelFiles) "                       
-Write-Host -ForegroundColor Yellow "[i] Lege Folders:            " -NoNewline
+Write-Host -ForegroundColor Yellow "[i] Empty folders:           " -NoNewline
 Write-Host -ForegroundColor Gray  "$($LegeFolders)"
-Write-Host -ForegroundColor Yellow "[i] bestanden log file:      " -NoNewline
+Write-Host -ForegroundColor Yellow "[i] log file:                " -NoNewline
 Write-Host -ForegroundColor Gray  "deletedFiles.log "
-Write-Host -ForegroundColor Yellow "[i] folder log file:         " -NoNewline
+Write-Host -ForegroundColor Yellow "[i] log file:                " -NoNewline
 Write-Host -ForegroundColor Gray  "deletedFolders.log "
 Write-Host -ForegroundColor Yellow "==============================================="
 
 
 #---- bevestig verwijdering ------
 
-   $title = "Bevestig permanente verwijdering van bestanden"
-   $message = "Weet je zeker dat je $($TotalDelFiles) bestanden wilt verwijderen?"
-   $yes = New-Object System.Management.Automation.Host.ChoiceDescription "&Ja", `
-            "Bevestig verwijdering!"
-   $no = New-Object System.Management.Automation.Host.ChoiceDescription "&Nee", `
-            "Cancel verwijdering"
+   $title = "Confirm non reversible removal of files"
+   $message = "Are you sure you want to delete $($TotalDelFiles) files?"
+   $yes = New-Object System.Management.Automation.Host.ChoiceDescription "&Yes", `
+            "Confirm!"
+   $no = New-Object System.Management.Automation.Host.ChoiceDescription "&NO", `
+            "Cancel!"
    $options = [System.Management.Automation.Host.ChoiceDescription[]]($yes, $no)
    $result = $host.ui.PromptForChoice($title, $message, $options, 0)
 
 
 Write-Host " "
-SchrijfOutput -level "info" -text "Start verwijderen van bestanden..."
+SchrijfOutput -level "info" -text "Start deleting files..."
 
 
 $hiddenReadOnlyItemes = 0
@@ -164,19 +171,19 @@ foreach ($bestand in $bestanden)
 
     } Catch [System.IO.IOException]
     {
-       SchrijfOutput -level "error" -text "$($bestand.Name) kon niet verwijderd worden!                                 "
+       SchrijfOutput -level "error" -text "$($bestand.Name) couldn't be deleted                                "
 
        $hiddenReadOnlyItemes += 1
 
     } Catch {
-       SchrijfOutput -level "error" -text "Er is een fout opgetreden met het verwijderen van een bestand "
+       SchrijfOutput -level "error" -text "There was an error with deleting a file"
     }
 
 }
 
 Write-Host "                                                                                      "                                                          
-SchrijfOutput -level "done" -text "Klaar met verwijderen van bestanden!"
-SchrijfOutput -level "done" -text "Nieuw log betand aangemaakt: deletedFiles.log"
+SchrijfOutput -level "done" -text "Done with delting files"
+SchrijfOutput -level "done" -text "New log file made: deletedFiles.log"
 
 
 
@@ -184,7 +191,7 @@ SchrijfOutput -level "done" -text "Nieuw log betand aangemaakt: deletedFiles.log
 #---- folders verwijderen ------
 
 Write-Host " "
-SchrijfOutput -level "info" -text "Start verwijderen van lege folders..."
+SchrijfOutput -level "info" -text "Start deleting empty folders..."
 
 
 $totalDelFolders = ( Get-ChildItem -Path $path -Recurse -Force | Where-Object { $_.PSIsContainer -and (Get-ChildItem -Path $_.FullName -Recurse -Force | Where-Object { !$_.PSIsContainer }) -eq $null } | Measure-Object ).Count;
@@ -214,30 +221,30 @@ foreach($folder in $folders)
 
 
 Write-Host "                                                                                                      "
-SchrijfOutput -level "done" -text "Klaar met verwijderen van folders!"
-SchrijfOutput -level "done" -text "Nieuw log betand aangemaakt: deletedFolders.log"
+SchrijfOutput -level "done" -text "Done with deleting folders"
+SchrijfOutput -level "done" -text "New log file made: deletedFolders.log"
 
 Write-Host " "
 Write-Host " "
 Write-Host -ForegroundColor Yellow "==============================================="
-Write-Host -ForegroundColor Yellow "[i] Totaal Aantal Bestanden: " -NoNewline
+Write-Host -ForegroundColor Yellow "[i] Total files:             " -NoNewline
 Write-Host -ForegroundColor Gray  "$($TotalFiles) "
-Write-Host -ForegroundColor Yellow "[i] Verwijderede bestanden:  " -NoNewline
+Write-Host -ForegroundColor Yellow "[i] deleted files:           " -NoNewline
 Write-Host -ForegroundColor Green  "$($verwijderdeBestanden) " 
-Write-Host -ForegroundColor Yellow "[i] Verwijderede folders:    " -NoNewline
+Write-Host -ForegroundColor Yellow "[i] deleted folders:         " -NoNewline
 Write-Host -ForegroundColor Green  "$($verwijderdeFolders)"                      
-Write-Host -ForegroundColor Yellow "[i] Niet kunnen verwijderen: " -NoNewline
+Write-Host -ForegroundColor Yellow "[i] Couldn't delete files:   " -NoNewline
 Write-Host -ForegroundColor Red  "$($hiddenReadOnlyItemes) "                       
-Write-Host -ForegroundColor Yellow "[i] bestanden log file:      " -NoNewline
+Write-Host -ForegroundColor Yellow "[i] log file:                " -NoNewline
 Write-Host -ForegroundColor Gray  "deletedFiles.log "
-Write-Host -ForegroundColor Yellow "[i] folder log file:         " -NoNewline
+Write-Host -ForegroundColor Yellow "[i] log file:                " -NoNewline
 Write-Host -ForegroundColor Gray  "deletedFolders.log "
 Write-Host -ForegroundColor Yellow "==============================================="
 Write-Host " "
 Write-Host " "
 
 
-SchrijfOutput -level "done" -text "KLaar, Druk op enter om af te sluiten..."
+SchrijfOutput -level "done" -text "Done... press enter to exit"
 $einde = Read-Host
 
 
