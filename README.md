@@ -3,7 +3,7 @@
 <h1 align="center" style="border: none !important; padding-bottom: 1em !important;">🗑<br><br>Old Files Remover</h1>  
 
 <p align="center">
-A Powershell script deletes files older than a certain date in a predefined folder. It checks the last-used date property of a file, when its older than the specified date, it will be deleted.
+A Powershell script deletes files older than a certain date in a predefined folder. It checks the last-used date property of a file, when its older than the specified date, it will be deleted. It also deletes all empty folders that it can find in its predefined folder.
 </p>
 
 ## Caution
