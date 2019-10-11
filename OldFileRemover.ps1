@@ -2,8 +2,8 @@
 #          INFO                
 #-------------------------
 # AUTHOR: Bastiaan Groen
-# Date  : 03-10-2019
-$version = "2.0"
+# Date  : 11-10-2019
+$version = "2.1"
 #-------------------------
 
 
@@ -117,7 +117,7 @@ catch
   exit
 }
 
-$TotalDelFiles = ( Get-ChildItem -Path $path -Recurse -Force | Where-Object { !$_.PSIsContainer -and $_.LastWriteTime -lt $limit } | Measure-Object ).Count;
+$TotalDelFiles = ( Get-ChildItem -Path $path -Recurse | Where-Object { !$_.PSIsContainer -and $_.LastWriteTime -lt $limit } | Measure-Object ).Count;
 $TotalFiles= ( Get-ChildItem -Path $path -Recurse -Force | Measure-Object ).Count;
 $LegeFolders = ( Get-ChildItem -Path $path -Recurse -Force | Where-Object { $_.PSIsContainer -and (Get-ChildItem -Path $_.FullName -Recurse -Force | Where-Object { !$_.PSIsContainer }) -eq $null } | Measure-Object ).Count;
 
@@ -135,6 +135,10 @@ Write-Host -ForegroundColor Gray  "deletedFiles.log "
 Write-Host -ForegroundColor Yellow "[i] log file:                " -NoNewline
 Write-Host -ForegroundColor Gray  "deletedFolders.log "
 Write-Host -ForegroundColor Yellow "==============================================="
+Write-Host " "
+Write-Host -ForegroundColor DarkGray "Deletes:     Read-Only files   "
+Write-Host -ForegroundColor DarkGray "Deletes NOT: Hidden files      "
+Write-Host -ForegroundColor DarkGray "             System files      "
 
 
 #---- bevestig verwijdering ------
@@ -159,7 +163,7 @@ $verwijderdeFolders = 0
 
 #---- bestanden verwijderen ------
 
-$bestanden = Get-ChildItem -Path $path -Recurse -Force | Where-Object { !$_.PSIsContainer -and $_.LastWriteTime -lt $limit }
+$bestanden = Get-ChildItem -Path $path -Recurse | Where-Object { !$_.PSIsContainer -and $_.LastWriteTime -lt $limit }
 foreach ($bestand in $bestanden)
 {
     try
